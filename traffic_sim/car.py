@@ -3,6 +3,9 @@
 Created on Fri Jan  1 16:08:47 2021
 
 @author: Sean
+
+This car is 2 x, 1 y (60p width, 30p height)
+Screen is 22.5 from top to bottom, 42.666 from left to right
 """
 
 import os
@@ -22,9 +25,8 @@ class Car:
             y,
             angle=0.0,
             length=4,
-            max_steering=30,
-            max_acceleration=10.0,
-            image=CAR_IMAGE_PATH
+            max_steering=100,
+            max_acceleration=10.0
         ):
         """ Create a car """
         
@@ -41,7 +43,7 @@ class Car:
         self.acceleration = 0.0
         self.steering = 0.0
         
-        self.image = pygame.image.load(image)
+        self.image = pygame.image.load(CAR_IMAGE_PATH)
 
     def update(self, dt):
         """ Update the car's physical parameters """
