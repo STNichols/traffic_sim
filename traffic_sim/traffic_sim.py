@@ -7,6 +7,8 @@ Created on Fri Jan  1 16:08:47 2021
 
 import pygame
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 from math import copysign
 
 from car import Car
@@ -36,7 +38,9 @@ class TrafficSim:
         self.screen = pygame.display.set_mode((self.width, self.height))
         self.clock = pygame.time.Clock()
         self.ticks = 60
+        self.current_time = 0.0
         self.exit = False
+        self.data = pd.DataFrame(columns=['time', 'velocity_x', 'velocity_y'])
         
         # Setup pixel occupation matrix
         self.pom = np.zeros((self.width, self.height))
@@ -46,22 +50,26 @@ class TrafficSim:
         
         ppu = 30
         
+        # Create my test car
         mcar = Car(1, 0.5)
         
         # Create library of cars that are driving
         car_lib = []
         for cid in np.arange(10):
-            car_lib.append(Car(1, 0.5 + cid))
+            car_lib.append(Car(1, 0.5 + cid, vx=5.0))
 
+        # Run the simulation
         while not self.exit:
+                        
             dt = self.clock.get_time() / 1000
+            self.current_time += dt
 
             # Event queue
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.exit = True
             
-            # User input
+            # User input for my car
             pressed = pygame.key.get_pressed()
 
             if pressed[pygame.K_UP]:
@@ -95,6 +103,7 @@ class TrafficSim:
                 mcar.steering = 0
             mcar.steering = max(-mcar.max_steering, min(mcar.steering, mcar.max_steering))
 
+
             # Prepare next screen
             self.screen.fill((0, 0, 0))
             
@@ -111,23 +120,44 @@ class TrafficSim:
             
             # Update my car
             mcar.update(dt)
+            #print(mcar.position)
             rotated = pygame.transform.rotate(mcar.image, mcar.angle)
             rect = rotated.get_rect()
             self.screen.blit(rotated, mcar.position * ppu - (rect.width / 2, rect.height / 2))
             
             # Update library of cars
-            for car in car_lib:
+            for ci, car in enumerate(car_lib):
+                if ci == 0:
+                    car.acceleration = -0.5
+                    vx = car.velocity.x
+                    vy = car.velocity.y
                 car.update(dt)
                 rotated = pygame.transform.rotate(car.image, car.angle)
                 rect = rotated.get_rect()
                 self.screen.blit(rotated, car.position * ppu - (rect.width / 2, rect.height / 2))
 
-
+            # Update game parameters
             pygame.display.flip()
             self.clock.tick(self.ticks)
+            current_data = pd.DataFrame({'time':[self.current_time], 'velocity_x':[vx], 'velocity_y':[vy]})
+            self.data = self.data.append(current_data, ignore_index=True)
             
+        self.display_results()
         pygame.quit()
-
+        
+    def display_results(self):
+        """ Analyze Post-Sim Results """
+        result_cols = self.data.columns.tolist()
+        result_cols.remove('time')
+        
+        n_plots = len(result_cols)
+        fig, axes = plt.subplots(nrows=n_plots, ncols=1, figsize=(10,8))
+        for ri, rc in enumerate(result_cols):
+            axes[ri].plot(self.data['time'], self.data[rc])
+            axes[ri].set_title(rc)
+            
+        fig.savefig('./sim_results.png')
+        self.data.to_csv('sim_results.csv')
 
 if __name__ == '__main__':
     ts = TrafficSim()

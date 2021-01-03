@@ -5,7 +5,6 @@ Created on Fri Jan  1 16:08:47 2021
 @author: Sean
 
 This car is 2 x, 1 y (60p width, 30p height)
-Screen is 22.5 from top to bottom, 42.666 from left to right
 """
 
 import os
@@ -23,6 +22,8 @@ class Car:
             self,
             x,
             y,
+            vx=0.0,
+            vy=0.0,
             angle=0.0,
             length=4,
             max_steering=100,
@@ -31,12 +32,12 @@ class Car:
         """ Create a car """
         
         self.position = Vector2(x, y)
-        self.velocity = Vector2(0.0, 0.0)
+        self.velocity = Vector2(vx, vy)
         self.angle = angle
         self.length = length
         self.max_acceleration = max_acceleration
         self.max_steering = max_steering
-        self.max_velocity = 20
+        self.max_velocity = 5
         self.brake_deceleration = 50
         self.free_deceleration = 2
 
@@ -44,6 +45,13 @@ class Car:
         self.steering = 0.0
         
         self.image = pygame.image.load(CAR_IMAGE_PATH)
+        
+        # Lane Change Parameters
+        self.current_lane = y
+        self.up_lane = y - 1
+        self.down_lane = y + 1
+        self.lane_change_up = False
+        self.lane_change_down = False
 
     def update(self, dt):
         """ Update the car's physical parameters """
